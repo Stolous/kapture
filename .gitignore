@@ -1,0 +1,10 @@
+# object files
+*.o
+
+# vim temporary files
+.*.swp
+.*.swo
+
+# build folder
+bin/*
+
