@@ -4,6 +4,8 @@
 # vim temporary files
 .*.swp
 .*.swo
+# vscode folder
+.vscode/*
 
 # build folder
 bin/*
