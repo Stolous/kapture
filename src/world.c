@@ -3,7 +3,7 @@
 #include "world.h"
 #include "settings.h"
 
-char** readMapFile()
+void readMapFile(WorldResources* res)
 {
 	FILE *mapFile = fopen("resources/map", "rt");
 	if(!mapFile)
@@ -20,7 +20,8 @@ char** readMapFile()
 		SDL_Quit();
 		exit(-1);
 	}
-	for(int i = 0; i<MAP_HEIGTH; i++)
+	printf("map:\n");	
+	for(int i = 0; i<MAP_HEIGTH; ++i)
 	{
 		char line[100];
 		fgets(line, sizeof(line), mapFile);
@@ -33,13 +34,37 @@ char** readMapFile()
 			exit(-1);
 		}
 		strcpy(mapArray[i], line);
+		printf("%s\n", mapArray[i]);
+	}
+	
+	// Getting the number of pawns
+	//int pawnCount;
+	//fscanf(mapFile, "%d", &pawnCount);
+	
+	printf("pawns:\n");	
+	char type, team, posX, posY;
+	Pawn* pawns = malloc(sizeof(Pawn));
+	int i = 0;
+	while(fscanf(mapFile, "%d %d %d %d", &type, &team, &posX, &posY) != EOF)
+	{
+		pawns[i].type = type;
+		pawns[i].team = team;
+		pawns[i].position.x = posX;
+		pawns[i].position.y = posY;
+		
+		printf("%d from team %d at %d, %d\n", type, team, posX, posY);
+		++i;
+		pawns = realloc(pawns, (i+1)*sizeof(Pawn));
 	}
 
-	printf("map:\n");	
-	for(int i = 0; i < MAP_HEIGTH; i++)
-		printf("%s\n", mapArray[i]);
-
-	return mapArray;
+	for(int j = 0; j < i; ++j)
+	{
+		printf("%d from team %d at %d, %d\n", pawns[j].type, pawns[j].team, pawns[j].position.x, pawns[j].position.y);
+	}
+	
+	res->map = mapArray;
+	res->pawnsCount = i;
+	res->pawns = pawns;
 }
 
 void createTextures(SDL_Renderer* renderer, SDL_Texture** mapTexture)
@@ -66,31 +91,55 @@ void setupWorld(SDL_Renderer* renderer, WorldResources* res)
 	
 	// Packing up world resources
 	//WorldResources res;
-	res->map = readMapFile();
+	readMapFile(res);
 	res->mapTexture = mapTexture;
+}
+
+
+void getTileInfo(char** map, int x, int y, Tile* tile)
+{
+	char tileByte = map[y][x] - '0';
+	// Biome
+	tile->biome = (tileByte & 0x7);
+	// Entity
+	tile->entity= (tileByte >> 0x3) & 0x7;
+	// Visibility
+	tile->visibility = (tileByte >> 0x6) & 0x7;
 }
 
 void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 {
-	//printf("%d\n", (int)(res->map[1][1]-'0'));
-	SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-	
-	for(int i = 0; i<MAP_WIDTH; i++)
+	// Display map tiles 
+	for(int i = 0; i < MAP_WIDTH; ++i)
 	{
-		for(int j = 0; j<MAP_HEIGTH; j++)
-		{ 
+		for(int j = 0; j < MAP_HEIGTH; ++j)
+		{
+			// Get tile informations
+			Tile tile;
+			getTileInfo(res->map, i, j, &tile);
 			// Source according to map
-			SDL_Rect srcRect = {(int)(res->map[j][i]-'0') * 32, 0, 32, 32};
+			SDL_Rect srcRect = {(int)(tile.biome) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE};
 			// Tile location on screen
-			SDL_Rect destRect = {MAP_LEFT + 32*i, MAP_TOP + 32*j, 32, 32};
+			SDL_Rect destRect = {MAP_LEFT + TILE_SIZE*i, MAP_TOP + TILE_SIZE*j, TILE_SIZE, TILE_SIZE};
 			SDL_RenderCopy(renderer, res->mapTexture, &srcRect, &destRect);
 		}
 	}	
 	
-	
-	for(int i = 0;i < WIDTH; i += 32)
+	for(int i = 0; i < res->pawnsCount; ++i)
+	{
+		// Souce according to pawn array
+		SDL_Rect srcRect = {(int)(/*res->pawns[i].type*/3) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE};
+		// Pawn location on screen
+		SDL_Rect destRect = {MAP_LEFT + TILE_SIZE * res->pawns[i].position.x, MAP_TOP + TILE_SIZE * res->pawns[i].position.y, TILE_SIZE, TILE_SIZE};
+		SDL_RenderCopy(renderer, res->mapTexture, &srcRect, &destRect);
+		
+	}
+
+	SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+	// Display the grid
+	for(int i = 0;i < WIDTH; i += TILE_SIZE)
 		SDL_RenderDrawLine(renderer, i, 0, i, HEIGTH);
-	for(int i = 0;i < HEIGTH; i += 32)
+	for(int i = 0;i < HEIGTH; i += TILE_SIZE)
 		SDL_RenderDrawLine(renderer, 0, i, WIDTH, i);
 	
 	//SDL_Surface* line = SDL_CreateRGBSurface(0, WIDTH, 0, 50, 0, 0, 0, 0);

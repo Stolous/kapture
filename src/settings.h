@@ -13,4 +13,7 @@
 #define MAP_LEFT 32
 #define MAP_TOP 32
 
+// Tiles
+#define TILE_SIZE 32
+
 #endif

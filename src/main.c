@@ -40,6 +40,8 @@ int main(int argc, char** argv)
 	{
 		while(SDL_PollEvent(&event))
 		{
+			// For mouse coordinates
+			int32_t x, y;
 			switch(event.type)
 			{
 				//printf("%s", event.text);
@@ -47,13 +49,19 @@ int main(int argc, char** argv)
 					shouldClose = 1;
 					break;
 				case SDL_MOUSEBUTTONDOWN:
-					printf("click\n");
+					SDL_GetMouseState(&x, &y);
+					printf("click: %d, %d\n", (int)((x - MAP_TOP) / TILE_SIZE), (int)(y - MAP_LEFT) / TILE_SIZE);
+					break;
+				default:
+					//printf("uncaught event: %d\n", event.type);
 					break;
 			}
 		}
 
 		SDL_UpdateWindowSurface(window);
 		
+		SDL_RenderClear(renderer);
+
 		renderWorld(renderer, &worldResources);
 
 		SDL_RenderPresent(renderer);
