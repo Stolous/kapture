@@ -131,8 +131,15 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 	
 	for(int i = 0; i < res->pawnsCount; ++i)
 	{
+		/*printf("%d", res->entitiesTexture);
+		SDL_Texture* texture = res->entitiesTexture;
+		if(res->pawns[i].team)
+			SDL_SetSurfaceColorMod(texture, TEAM_1_COLOR);
+		else
+			SDL_SetSurfaceColorMod(texture, 0,0,255);
+		*/
 		// Souce according to pawn array
-		SDL_Rect srcRect = {(int)(res->pawns[i].type) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE};
+		SDL_Rect srcRect = {(int)res->pawns[i].type * TILE_SIZE, (int)res->pawns[i].team * TILE_SIZE, TILE_SIZE, TILE_SIZE};
 		// Pawn location on screen
 		SDL_Rect destRect = {MAP_LEFT + TILE_SIZE * res->pawns[i].position.x, MAP_TOP + TILE_SIZE * res->pawns[i].position.y, TILE_SIZE, TILE_SIZE};
 		SDL_RenderCopy(renderer, res->entitiesTexture, &srcRect, &destRect);

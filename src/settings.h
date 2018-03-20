@@ -16,4 +16,8 @@
 // Tiles
 #define TILE_SIZE 32
 
+// Teams
+#define TEAM_0_COLOR 0, 0, 255
+#define TEAM_1_COLOR 255, 0, 0 
+
 #endif
