@@ -67,32 +67,36 @@ void readMapFile(WorldResources* res)
 	res->pawns = pawns;
 }
 
-void createTextures(SDL_Renderer* renderer, SDL_Texture** mapTexture)
+void createTextures(SDL_Renderer* renderer, SDL_Texture** terrainTexture, SDL_Texture** entitiesTexture)
 {
 	// Load tileset
-	SDL_Surface* tileset;
-	tileset = SDL_LoadBMP("resources/map_tiles.bmp");
-	if (!tileset)
+	SDL_Surface *tTileset, *eTileset;
+	tTileset = SDL_LoadBMP("resources/map_tiles.bmp");
+	eTileset = SDL_LoadBMP("resources/entities_tiles.bmp");
+	
+	if (!tTileset || !eTileset)
 	{
-		fprintf(stderr, "Failed to load map tileset\n");
+		fprintf(stderr, "Failed to load map tilesets\n");
 		SDL_Quit();
 		exit(-1);
 	}
 
 	// Create texures from tileset
-	*mapTexture = SDL_CreateTextureFromSurface(renderer, tileset);
+	*terrainTexture = SDL_CreateTextureFromSurface(renderer, tTileset);
+	*entitiesTexture = SDL_CreateTextureFromSurface(renderer, eTileset);
 }
 
 void setupWorld(SDL_Renderer* renderer, WorldResources* res)
 {
 	// Getting textures
-	SDL_Texture* mapTexture;
-	createTextures(renderer, &mapTexture);
+	SDL_Texture *terrainTexture, *entitiesTexture;
+	createTextures(renderer, &terrainTexture, &entitiesTexture);
 	
 	// Packing up world resources
 	//WorldResources res;
 	readMapFile(res);
-	res->mapTexture = mapTexture;
+	res->terrainTexture = terrainTexture;
+	res->entitiesTexture = entitiesTexture;
 }
 
 
@@ -121,17 +125,17 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 			SDL_Rect srcRect = {(int)(tile.biome) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE};
 			// Tile location on screen
 			SDL_Rect destRect = {MAP_LEFT + TILE_SIZE*i, MAP_TOP + TILE_SIZE*j, TILE_SIZE, TILE_SIZE};
-			SDL_RenderCopy(renderer, res->mapTexture, &srcRect, &destRect);
+			SDL_RenderCopy(renderer, res->terrainTexture, &srcRect, &destRect);
 		}
 	}	
 	
 	for(int i = 0; i < res->pawnsCount; ++i)
 	{
 		// Souce according to pawn array
-		SDL_Rect srcRect = {(int)(/*res->pawns[i].type*/3) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE};
+		SDL_Rect srcRect = {(int)(res->pawns[i].type) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE};
 		// Pawn location on screen
 		SDL_Rect destRect = {MAP_LEFT + TILE_SIZE * res->pawns[i].position.x, MAP_TOP + TILE_SIZE * res->pawns[i].position.y, TILE_SIZE, TILE_SIZE};
-		SDL_RenderCopy(renderer, res->mapTexture, &srcRect, &destRect);
+		SDL_RenderCopy(renderer, res->entitiesTexture, &srcRect, &destRect);
 		
 	}
 

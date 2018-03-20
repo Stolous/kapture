@@ -21,7 +21,8 @@ Pawn;
 
 typedef struct WorldResources
 {
-	SDL_Texture* mapTexture;
+	SDL_Texture* terrainTexture;
+	SDL_Texture* entitiesTexture;
 	// Map, containing only tiles
 	char** map;
 	// Pawns array
@@ -31,7 +32,7 @@ typedef struct WorldResources
 WorldResources;
 
 void readMapFile(WorldResources* res);
-void createTextures(SDL_Renderer* renderer, SDL_Texture** tex_Plains);
+void createTextures(SDL_Renderer* renderer, SDL_Texture** terrainTexture, SDL_Texture** entitiesTexture);
 void setupWorld(SDL_Renderer* renderer, WorldResources* res);
 
 typedef struct Tile
