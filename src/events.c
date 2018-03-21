@@ -15,10 +15,16 @@ int handleEvent(SDL_Event event, WorldResources* res)
 			return 1;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
+			// Get cell under mouse pointer
 			SDL_GetMouseState(&x, &y);
 			Vector2 cell = {((x - MAP_TOP) / TILE_SIZE), (y - MAP_LEFT) / TILE_SIZE};
 			printf("click: %d, %d\n", cell.x, cell.y);
+			// Move selected pawn
+			movePawn(res, res->selectedPawn, cell);
+
+			// Select pawn
 			res->selectedPawn = getPawnAt(res, cell);
+
 			break;
 		default:
 			//printf("uncaught event: %d\n", event.type);

@@ -117,10 +117,45 @@ Pawn* getPawnAt(WorldResources* res, Vector2 position)
 	{
 		if(res->pawns[i].position.x == position.x && res->pawns[i].position.y == position.y)
 		{
-			return &res->pawns[i];
+			if(res->pawns[i].type != 0)
+				return &res->pawns[i];
 		}
 	}
 	return NULL;
+}
+
+int getMovPoints(Pawn* pawn, char tileType)
+{
+	char type = pawn->type;
+	char points = type == 0 ? 0 : type == 1 ? 5 : type == 2 ? 3 : 2;
+	// changing points according to terrain limitations
+	switch(tileType/*res->map[res->selectedPawn->position.y][res->selectedPawn->position.x]*/)
+	{
+		case '1':
+			points /= 2;
+			break;
+		case '2':
+			points = 1;
+			break;
+	}
+	
+	return points;
+}
+int movePawn(WorldResources* res, Pawn* pawn, Vector2 dest)
+{
+	if(getPawnAt(res, dest) != NULL)
+		return 1; // There is already a pawn at this place
+	if(pawn == NULL)
+		return 2; // No one to move
+	
+	int points = getMovPoints(pawn, res->map[dest.y][dest.x]);
+	if(	dest.x < pawn->position.x - points || 
+		dest.x > pawn->position.x + points ||
+		dest.y < pawn->position.y - points ||
+		dest.y > pawn->position.y + points)
+		return 3; // Too far
+	
+	pawn->position = dest;
 }
 
 void renderWorld(SDL_Renderer* renderer, WorldResources* res)
@@ -171,7 +206,8 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 	// Draw the movement square
 	if(res->selectedPawn != NULL)
 	{
-		char type = res->selectedPawn->type;
+		int points = getMovPoints(res->selectedPawn, res->map[res->selectedPawn->position.y][res->selectedPawn->position.x]);
+		/*char type = res->selectedPawn->type;
 		char points = type == 0 ? 0 : type == 1 ? 5 : type == 2 ? 3 : 2;
 		// changing points according to terrain limitations
 		switch(res->map[res->selectedPawn->position.y][res->selectedPawn->position.x])
@@ -182,7 +218,7 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 			case '2':
 				points = 1;
 				break;
-		}
+		}*/
 		// Getting positions on screen
 		int posX = res->selectedPawn->position.x * TILE_SIZE + MAP_LEFT;
 		int posY = res->selectedPawn->position.y * TILE_SIZE + MAP_TOP;
@@ -195,7 +231,7 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 			{posX - (TILE_SIZE * points), posY - (TILE_SIZE * points)}
 		};
 		// Skipping if this is a flag
-		if(type)
+		if(res->selectedPawn->type)
 		{
 			SDL_SetRenderDrawColor(renderer, 255, 30, 30, 255);
 			SDL_RenderDrawLines(renderer, square, 5);

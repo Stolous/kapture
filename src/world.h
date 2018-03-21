@@ -47,6 +47,8 @@ Tile;
 
 void getTileInfo(char** map, int x, int y, Tile* tile);
 Pawn* getPawnAt(WorldResources* resources, Vector2 position);
+int getMovPoints(Pawn* pawn, char tileType);
+int movePawn(WorldResources* resources, Pawn* pawn, Vector2 destination);
 
 void renderWorld(SDL_Renderer* renderer, WorldResources* res);
 

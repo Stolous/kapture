@@ -5,6 +5,7 @@
 #include "settings.h"
 #include "world.h"
 #include "events.h"
+#include "game.h"
 
 int main(int argc, char** argv)
 {
@@ -29,6 +30,11 @@ int main(int argc, char** argv)
 
 	SDL_UpdateWindowSurface(window);
 	SDL_Surface* surface = SDL_GetWindowSurface(window);
+
+	// Initialize game
+	GameInfo gameInfo;
+	gameInfo.turn = 0;
+	gameInfo.currentPlayer = 0;
 
 	// Initialize world
 	WorldResources worldResources;
