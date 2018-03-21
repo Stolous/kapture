@@ -4,6 +4,7 @@
 
 #include "settings.h"
 #include "world.h"
+#include "events.h"
 
 int main(int argc, char** argv)
 {
@@ -31,6 +32,7 @@ int main(int argc, char** argv)
 
 	// Initialize world
 	WorldResources worldResources;
+	worldResources.selectedPawn = NULL;
 	setupWorld(renderer, &worldResources);
 
 	// Main game loop
@@ -40,22 +42,7 @@ int main(int argc, char** argv)
 	{
 		while(SDL_PollEvent(&event))
 		{
-			// For mouse coordinates
-			int32_t x, y;
-			switch(event.type)
-			{
-				//printf("%s", event.text);
-				case SDL_QUIT:
-					shouldClose = 1;
-					break;
-				case SDL_MOUSEBUTTONDOWN:
-					SDL_GetMouseState(&x, &y);
-					printf("click: %d, %d\n", (int)((x - MAP_TOP) / TILE_SIZE), (int)(y - MAP_LEFT) / TILE_SIZE);
-					break;
-				default:
-					//printf("uncaught event: %d\n", event.type);
-					break;
-			}
+			shouldClose = handleEvent(event, &worldResources);
 		}
 
 		SDL_UpdateWindowSurface(window);
@@ -63,6 +50,8 @@ int main(int argc, char** argv)
 		SDL_RenderClear(renderer);
 
 		renderWorld(renderer, &worldResources);
+		
+		SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
 
 		SDL_RenderPresent(renderer);
 		SDL_Delay(16);

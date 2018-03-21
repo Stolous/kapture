@@ -19,6 +19,7 @@ typedef struct Pawn
 }
 Pawn;
 
+
 typedef struct WorldResources
 {
 	SDL_Texture* terrainTexture;
@@ -28,6 +29,7 @@ typedef struct WorldResources
 	// Pawns array
 	int pawnsCount;
 	Pawn* pawns;
+	Pawn* selectedPawn;
 }
 WorldResources;
 
@@ -42,7 +44,9 @@ typedef struct Tile
 	char visibility;
 }
 Tile;
+
 void getTileInfo(char** map, int x, int y, Tile* tile);
+Pawn* getPawnAt(WorldResources* resources, Vector2 position);
 
 void renderWorld(SDL_Renderer* renderer, WorldResources* res);
 

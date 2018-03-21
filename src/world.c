@@ -111,6 +111,18 @@ void getTileInfo(char** map, int x, int y, Tile* tile)
 	tile->visibility = (tileByte >> 0x6) & 0x7;
 }
 
+Pawn* getPawnAt(WorldResources* res, Vector2 position)
+{
+	for(int i = 0; i < res->pawnsCount; ++i)
+	{
+		if(res->pawns[i].position.x == position.x && res->pawns[i].position.y == position.y)
+		{
+			return &res->pawns[i];
+		}
+	}
+	return NULL;
+}
+
 void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 {
 	// Display map tiles 
@@ -156,5 +168,38 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 	//SDL_Surface* line = SDL_CreateRGBSurface(0, WIDTH, 0, 50, 0, 0, 0, 0);
 	//SDL_FillRect(line, NULL, SDL_MapRGB(line->format, 255, 0, 0));
 	
+	// Draw the movement square
+	if(res->selectedPawn != NULL)
+	{
+		char type = res->selectedPawn->type;
+		char points = type == 0 ? 0 : type == 1 ? 5 : type == 2 ? 3 : 2;
+		// changing points according to terrain limitations
+		switch(res->map[res->selectedPawn->position.y][res->selectedPawn->position.x])
+		{
+			case '1':
+				points /= 2;
+				break;
+			case '2':
+				points = 1;
+				break;
+		}
+		// Getting positions on screen
+		int posX = res->selectedPawn->position.x * TILE_SIZE + MAP_LEFT;
+		int posY = res->selectedPawn->position.y * TILE_SIZE + MAP_TOP;
+		// Points in the square
+		SDL_Point square[5] = {
+			{posX - (TILE_SIZE * points), posY - (TILE_SIZE * points)},
+			{posX - (TILE_SIZE * points), posY + (TILE_SIZE * (points + 1))},
+			{posX + (TILE_SIZE * (points + 1)), posY + (TILE_SIZE * (points + 1))},
+			{posX + (TILE_SIZE * (points + 1)), posY - (TILE_SIZE * points)},
+			{posX - (TILE_SIZE * points), posY - (TILE_SIZE * points)}
+		};
+		// Skipping if this is a flag
+		if(type)
+		{
+			SDL_SetRenderDrawColor(renderer, 255, 30, 30, 255);
+			SDL_RenderDrawLines(renderer, square, 5);
+		}
+	}
 
 }
