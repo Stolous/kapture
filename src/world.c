@@ -1,7 +1,8 @@
 #include <SDL2/SDL.h>
 
-#include "world.h"
 #include "settings.h"
+#include "game.h"
+#include "world.h"
 
 void readMapFile(WorldResources* res)
 {
@@ -51,6 +52,8 @@ void readMapFile(WorldResources* res)
 		pawns[i].team = team;
 		pawns[i].position.x = posX;
 		pawns[i].position.y = posY;
+
+		pawns[i].hasPlayed = 0;
 		
 		printf("%d from team %d at %d, %d\n", type, team, posX, posY);
 		++i;
@@ -86,6 +89,35 @@ void createTextures(SDL_Renderer* renderer, SDL_Texture** terrainTexture, SDL_Te
 	*entitiesTexture = SDL_CreateTextureFromSurface(renderer, eTileset);
 }
 
+void initFog(WorldResources* res)
+{
+	char** fogArray;
+	if((fogArray = malloc(MAP_HEIGTH * sizeof(char*))) == NULL)
+	{
+		fprintf(stderr, "Failed to allocate fog in memory\n");
+		SDL_Quit();
+		exit(-1);
+	}
+	for(int i = 0; i<MAP_HEIGTH; ++i)
+	{
+		if((fogArray[i] = calloc((MAP_WIDTH+1), sizeof(char))) == NULL)
+		{
+			fprintf(stderr, "Failed to allocate fog in memory\n");
+			SDL_Quit();
+			exit(-1);
+		}
+	}
+
+	for(int i = 0; i < MAP_WIDTH; ++i)
+	{
+		for(int j = 0; j < MAP_HEIGTH; ++j)
+		{
+			fogArray[j][i] = (i < 7 && j > 12) ? 1 : (i > 24 && j < 7) ? 2 : 0;
+		}
+	}
+	res->fog = fogArray;
+}
+
 void setupWorld(SDL_Renderer* renderer, WorldResources* res)
 {
 	// Getting textures
@@ -95,6 +127,7 @@ void setupWorld(SDL_Renderer* renderer, WorldResources* res)
 	// Packing up world resources
 	//WorldResources res;
 	readMapFile(res);
+	initFog(res);
 	res->terrainTexture = terrainTexture;
 	res->entitiesTexture = entitiesTexture;
 }
@@ -124,6 +157,60 @@ Pawn* getPawnAt(WorldResources* res, Vector2 position)
 	return NULL;
 }
 
+void killPawn(WorldResources* res, Pawn* pawn)
+{
+	if(pawn->team)
+		pawn->position = (Vector2){29, 2};
+	else
+		pawn->position = (Vector2){2, 17};
+}
+
+void handleFight(WorldResources* res, Pawn* pawn)
+{
+	Pawn* enemy = NULL;
+	// Find nearby enemy
+	for(int i = 0; i < res->pawnsCount; ++i)
+	{
+		char posX = res->pawns[i].position.x, posY = res->pawns[i].position.y;
+		if((posY == pawn->position.y && (posX - 1 == pawn->position.x || posX + 1 == pawn->position.x)) ||
+			(posX == pawn->position.x && (posY - 1 == pawn->position.y || posY + 1 == pawn->position.y)))
+			enemy = &res->pawns[i];
+	}
+
+	srand(time(0));
+	char randBool = rand() % 2;
+
+	// Choosing which enemy to kill
+	if(enemy == NULL)
+		return; // No one to fight
+	if(enemy->type == 0) 
+		res->flagWearers[pawn->team] = pawn;
+		return;
+	if(enemy->type == 1)
+	{
+		if(pawn->type == 1)
+			return; // scout vs scout : nothing happens
+		if(pawn->type > 1)
+			killPawn(res, enemy);
+	}
+	else if(enemy->type == 2)
+	{
+		if(pawn->type == 1)
+			killPawn(res, pawn);
+		if(pawn->type == 2)
+			killPawn(res, randBool ? enemy : pawn);
+		if(pawn->type > 2)
+			killPawn(res, enemy);
+	}
+	else if(enemy->type == 3)
+	{
+		if(pawn->type < 3)
+			killPawn(res, pawn);
+		if(pawn->type == 3)
+			killPawn(res, randBool ? enemy : pawn);
+	}
+}
+
 int getMovPoints(Pawn* pawn, char tileType)
 {
 	char type = pawn->type;
@@ -141,24 +228,41 @@ int getMovPoints(Pawn* pawn, char tileType)
 	
 	return points;
 }
-int movePawn(WorldResources* res, Pawn* pawn, Vector2 dest)
+int movePawn(GameInfo* gi, WorldResources* res, Pawn* pawn, Vector2 dest)
 {
 	if(getPawnAt(res, dest) != NULL)
 		return 1; // There is already a pawn at this place
 	if(pawn == NULL)
 		return 2; // No one to move
 	
-	int points = getMovPoints(pawn, res->map[dest.y][dest.x]);
+	int points = getMovPoints(pawn, res->map[pawn->position.y][pawn->position.x]);
 	if(	dest.x < pawn->position.x - points || 
 		dest.x > pawn->position.x + points ||
 		dest.y < pawn->position.y - points ||
 		dest.y > pawn->position.y + points)
 		return 3; // Too far
 	
+	if(dest.x < 0 || dest.x > (MAP_WIDTH - 1) || dest.y < 0 || dest.y > (MAP_HEIGTH - 1))
+		return 4; // Out of map boundaries
+	
 	pawn->position = dest;
+	char bitSet = (gi->turn%2 ? 0x1 : 0x2);
+	res->fog[dest.y][dest.x] |= bitSet;
+	if(dest.y > 0)
+		res->fog[dest.y - 1][dest.x] |= bitSet;
+	if(dest.y < (MAP_HEIGTH - 1))
+		res->fog[dest.y + 1][dest.x] |= bitSet;
+	if(dest.x > 0)
+		res->fog[dest.y][dest.x - 1] |= bitSet;
+	if(dest.x < (MAP_WIDTH))
+		res->fog[dest.y][dest.x + 1] |= bitSet;
+
+	pawn->hasPlayed = 1;
+	res->selectedPawn = NULL;
+	handleFight(res, pawn);
 }
 
-void renderWorld(SDL_Renderer* renderer, WorldResources* res)
+void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 {
 	// Display map tiles 
 	for(int i = 0; i < MAP_WIDTH; ++i)
@@ -172,7 +276,11 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 			SDL_Rect srcRect = {(int)(tile.biome) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE};
 			// Tile location on screen
 			SDL_Rect destRect = {MAP_LEFT + TILE_SIZE*i, MAP_TOP + TILE_SIZE*j, TILE_SIZE, TILE_SIZE};
-			SDL_RenderCopy(renderer, res->terrainTexture, &srcRect, &destRect);
+
+			// rendering if we can see it
+			if(((res->fog[j][i] >> 0x1) && !(gi->turn % 2)) ||
+				(res->fog[j][i] & 0x1) && (gi->turn % 2))
+				SDL_RenderCopy(renderer, res->terrainTexture, &srcRect, &destRect);
 		}
 	}	
 	
@@ -189,7 +297,10 @@ void renderWorld(SDL_Renderer* renderer, WorldResources* res)
 		SDL_Rect srcRect = {(int)res->pawns[i].type * TILE_SIZE, (int)res->pawns[i].team * TILE_SIZE, TILE_SIZE, TILE_SIZE};
 		// Pawn location on screen
 		SDL_Rect destRect = {MAP_LEFT + TILE_SIZE * res->pawns[i].position.x, MAP_TOP + TILE_SIZE * res->pawns[i].position.y, TILE_SIZE, TILE_SIZE};
-		SDL_RenderCopy(renderer, res->entitiesTexture, &srcRect, &destRect);
+		// rendering if we can see it
+		if(((res->fog[res->pawns[i].position.y][res->pawns[i].position.x] >> 0x1) && !(gi->turn % 2)) ||
+			(res->fog[res->pawns[i].position.y][res->pawns[i].position.x] & 0x1) && (gi->turn % 2))
+			SDL_RenderCopy(renderer, res->entitiesTexture, &srcRect, &destRect);
 		
 	}
 

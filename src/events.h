@@ -3,6 +3,6 @@
 
 #include <SDL2/SDL.h>
 
-int handleEvent(SDL_Event event, WorldResources* resources);
+int handleEvent(SDL_Event event, GameInfo* gameInfo, WorldResources* resources);
 
 #endif

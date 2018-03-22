@@ -3,7 +3,7 @@
 
 // Size of the window in pixels
 #define WIDTH 1080
-#define HEIGTH 720
+#define HEIGTH 820
 
 // Map size
 #define MAP_WIDTH 32

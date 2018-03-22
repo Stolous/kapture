@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "settings.h"
 #include "world.h"
@@ -31,9 +32,19 @@ int main(int argc, char** argv)
 	SDL_UpdateWindowSurface(window);
 	SDL_Surface* surface = SDL_GetWindowSurface(window);
 
+	if(TTF_Init() == -1)
+	{
+		fprintf(stderr, "Failed to initialize SDL2_TTF\n%s\n", TTF_GetError());
+		exit(EXIT_FAILURE);
+	}	
+	// Create the GUI
+	TTF_Font* font = TTF_OpenFont("resources/font.ttf", 24);
+
+
+
 	// Initialize game
 	GameInfo gameInfo;
-	gameInfo.turn = 0;
+	gameInfo.turn = 1;
 	gameInfo.currentPlayer = 0;
 
 	// Initialize world
@@ -48,14 +59,15 @@ int main(int argc, char** argv)
 	{
 		while(SDL_PollEvent(&event))
 		{
-			shouldClose = handleEvent(event, &worldResources);
+			shouldClose = handleEvent(event, &gameInfo, &worldResources);
 		}
 
 		SDL_UpdateWindowSurface(window);
 		
 		SDL_RenderClear(renderer);
 
-		renderWorld(renderer, &worldResources);
+		renderWorld(renderer, &gameInfo, &worldResources);
+		drawHUD(renderer, font, &gameInfo);
 		
 		SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
 
@@ -64,6 +76,10 @@ int main(int argc, char** argv)
 	}
 
 	SDL_DestroyWindow(window);
+	SDL_Quit();
+
+	TTF_CloseFont(font);
+	TTF_Quit();
 	
 	return 0;
 }
