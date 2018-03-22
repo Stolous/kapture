@@ -37,17 +37,15 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Failed to initialize SDL2_TTF\n%s\n", TTF_GetError());
 		exit(EXIT_FAILURE);
 	}	
-	// Create the GUI
+	// Creating the GUI
 	TTF_Font* font = TTF_OpenFont("resources/font.ttf", 24);
 
-
-
-	// Initialize game
+	// Initializing game
 	GameInfo gameInfo;
 	gameInfo.turn = 1;
 	gameInfo.winner = -1;
 
-	// Initialize world
+	// Initializing world
 	WorldResources worldResources;
 	worldResources.selectedPawn = NULL;
 	setupWorld(renderer, &worldResources);
@@ -67,6 +65,7 @@ int main(int argc, char** argv)
 	SDL_Event event;
 	while(!shouldClose)
 	{
+		// Sending all events to event handler
 		while(SDL_PollEvent(&event))
 		{
 			shouldClose = handleEvent(event, &gameInfo, &worldResources);
@@ -75,7 +74,8 @@ int main(int argc, char** argv)
 		SDL_UpdateWindowSurface(window);
 		
 		SDL_RenderClear(renderer);
-
+		
+		// Render world and HUD
 		renderWorld(renderer, &gameInfo, &worldResources);
 		drawHUD(renderer, font, &gameInfo);
 		
@@ -90,6 +90,7 @@ int main(int argc, char** argv)
 		SDL_Delay(16);
 	}
 
+	// Showing a messagebox to tell which player won the game
 	if(gameInfo.winner != -1)
 	{
 		char text[] = "Winner : ";
@@ -97,6 +98,7 @@ int main(int argc, char** argv)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Game finished", text, window);
 	}
 
+	// Closing window and quitting SDL
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 

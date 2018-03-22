@@ -12,6 +12,4 @@ GameInfo;
 
 void drawHUD(SDL_Renderer* renderer, TTF_Font* font, GameInfo* gi);
 
-void endOfTurn(GameInfo* gi);
-
 #endif

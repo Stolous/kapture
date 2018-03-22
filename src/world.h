@@ -28,6 +28,7 @@ typedef struct WorldResources
 	SDL_Texture* entitiesTexture;
 	// Map, containing only tiles
 	char** map;
+	// Fog of war (1st and 2nd bits for each team)
 	char** fog;
 	// Pawns array
 	int pawnsCount;

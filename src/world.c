@@ -38,10 +38,6 @@ void readMapFile(WorldResources* res)
 		printf("%s\n", mapArray[i]);
 	}
 	
-	// Getting the number of pawns
-	//int pawnCount;
-	//fscanf(mapFile, "%d", &pawnCount);
-	
 	printf("pawns:\n");	
 	char type, team, posX, posY;
 	Pawn* pawns = malloc(sizeof(Pawn));
@@ -229,8 +225,8 @@ int getMovPoints(Pawn* pawn, char tileType)
 {
 	char type = pawn->type;
 	char points = type == 0 ? 0 : type == 1 ? 5 : type == 2 ? 3 : 2;
-	// changing points according to terrain limitations
-	switch(tileType/*res->map[res->selectedPawn->position.y][res->selectedPawn->position.x]*/)
+	// Changing points according to terrain limitations
+	switch(tileType)
 	{
 		case '1':
 			points /= 2;
@@ -297,22 +293,16 @@ void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 			// Tile location on screen
 			SDL_Rect destRect = {MAP_LEFT + TILE_SIZE*i, MAP_TOP + TILE_SIZE*j, TILE_SIZE, TILE_SIZE};
 
-			// rendering if we can see it
+			// Render if we can see it
 			if(((res->fog[j][i] >> 0x1) && !(gi->turn % 2)) ||
 				(res->fog[j][i] & 0x1) && (gi->turn % 2))
 				SDL_RenderCopy(renderer, res->terrainTexture, &srcRect, &destRect);
 		}
 	}	
 	
+	// Display pawns
 	for(int i = 0; i < res->pawnsCount; ++i)
 	{
-		/*printf("%d", res->entitiesTexture);
-		SDL_Texture* texture = res->entitiesTexture;
-		if(res->pawns[i].team)
-			SDL_SetSurfaceColorMod(texture, TEAM_1_COLOR);
-		else
-			SDL_SetSurfaceColorMod(texture, 0,0,255);
-		*/
 		// Souce according to pawn array
 		SDL_Rect srcRect = {(int)res->pawns[i].type * TILE_SIZE, (int)res->pawns[i].team * TILE_SIZE, TILE_SIZE, TILE_SIZE};
 		// Pawn location on screen
@@ -324,32 +314,17 @@ void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 		
 	}
 
-	SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
 	// Display the grid
+	SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
 	for(int i = 0;i < WIDTH; i += TILE_SIZE)
 		SDL_RenderDrawLine(renderer, i, 0, i, HEIGTH);
 	for(int i = 0;i < HEIGTH; i += TILE_SIZE)
 		SDL_RenderDrawLine(renderer, 0, i, WIDTH, i);
 	
-	//SDL_Surface* line = SDL_CreateRGBSurface(0, WIDTH, 0, 50, 0, 0, 0, 0);
-	//SDL_FillRect(line, NULL, SDL_MapRGB(line->format, 255, 0, 0));
-	
 	// Draw the movement square
 	if(res->selectedPawn != NULL)
 	{
 		int points = getMovPoints(res->selectedPawn, res->map[res->selectedPawn->position.y][res->selectedPawn->position.x]);
-		/*char type = res->selectedPawn->type;
-		char points = type == 0 ? 0 : type == 1 ? 5 : type == 2 ? 3 : 2;
-		// changing points according to terrain limitations
-		switch(res->map[res->selectedPawn->position.y][res->selectedPawn->position.x])
-		{
-			case '1':
-				points /= 2;
-				break;
-			case '2':
-				points = 1;
-				break;
-		}*/
 		// Getting positions on screen
 		int posX = res->selectedPawn->position.x * TILE_SIZE + MAP_LEFT;
 		int posY = res->selectedPawn->position.y * TILE_SIZE + MAP_TOP;

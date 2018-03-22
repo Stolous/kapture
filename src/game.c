@@ -27,7 +27,3 @@ void endOfTurn(GameInfo* gi)
 {
 	++gi->turn;
 }
-
-void endOfGame(char winner)
-{
-}
