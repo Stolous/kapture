@@ -33,6 +33,8 @@ typedef struct WorldResources
 	int pawnsCount;
 	Pawn* pawns;
 	Pawn* selectedPawn;
+	// Flags
+	Pawn* flags[2];
 	Pawn* flagWearers[2];
 }
 WorldResources;
@@ -53,7 +55,7 @@ Tile;
 void getTileInfo(char** map, int x, int y, Tile* tile);
 Pawn* getPawnAt(WorldResources* resources, Vector2 position);
 void killPawn(WorldResources* resources, Pawn* pawn);
-void handleFight(WorldResources* resources, Pawn* pawn);
+void handleFight(GameInfo*gameInfo, WorldResources* resources, Pawn* pawn);
 int getMovPoints(Pawn* pawn, char tileType);
 int movePawn(GameInfo* gi, WorldResources* resources, Pawn* pawn, Vector2 destination);
 void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res);

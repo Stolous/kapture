@@ -8,7 +8,7 @@ void drawHUD(SDL_Renderer* renderer, TTF_Font* font, GameInfo* gi)
 {
 	// Dynamic turn display
 	char text[] = "Turn";
-	sprintf(text, "%s %d", text, gi->turn);
+	sprintf(text, "%s %d", text, (gi->turn+1)/2);
 	SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, (SDL_Color){255, 255, 255});
 	SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 	const SDL_Rect textRect = {100, 720, 200, 50};
@@ -26,4 +26,8 @@ void drawHUD(SDL_Renderer* renderer, TTF_Font* font, GameInfo* gi)
 void endOfTurn(GameInfo* gi)
 {
 	++gi->turn;
+}
+
+void endOfGame(char winner)
+{
 }

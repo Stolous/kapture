@@ -148,10 +148,11 @@ Pawn* getPawnAt(WorldResources* res, Vector2 position)
 {
 	for(int i = 0; i < res->pawnsCount; ++i)
 	{
-		if(res->pawns[i].position.x == position.x && res->pawns[i].position.y == position.y)
+		if(res->pawns[i].type != 0 &&
+			res->pawns[i].position.x == position.x &&
+			res->pawns[i].position.y == position.y)
 		{
-			if(res->pawns[i].type != 0)
-				return &res->pawns[i];
+			return &res->pawns[i];
 		}
 	}
 	return NULL;
@@ -159,21 +160,27 @@ Pawn* getPawnAt(WorldResources* res, Vector2 position)
 
 void killPawn(WorldResources* res, Pawn* pawn)
 {
+	if(res->flagWearers[abs(pawn->team-1)] != NULL &&
+		res->flagWearers[abs(pawn->team-1)] == pawn)
+	{
+		res->flagWearers[abs(pawn->team-1)] = NULL;
+	}
 	if(pawn->team)
 		pawn->position = (Vector2){29, 2};
 	else
 		pawn->position = (Vector2){2, 17};
 }
 
-void handleFight(WorldResources* res, Pawn* pawn)
+void handleFight(GameInfo* gi, WorldResources* res, Pawn* pawn)
 {
 	Pawn* enemy = NULL;
 	// Find nearby enemy
 	for(int i = 0; i < res->pawnsCount; ++i)
 	{
 		char posX = res->pawns[i].position.x, posY = res->pawns[i].position.y;
-		if((posY == pawn->position.y && (posX - 1 == pawn->position.x || posX + 1 == pawn->position.x)) ||
-			(posX == pawn->position.x && (posY - 1 == pawn->position.y || posY + 1 == pawn->position.y)))
+		if(((posY == pawn->position.y && (posX - 1 == pawn->position.x || posX + 1 == pawn->position.x)) ||
+			(posX == pawn->position.x && (posY - 1 == pawn->position.y || posY + 1 == pawn->position.y))) &&
+			(res->pawns[i].team != pawn->team || res->pawns[i].type == 0))
 			enemy = &res->pawns[i];
 	}
 
@@ -183,13 +190,20 @@ void handleFight(WorldResources* res, Pawn* pawn)
 	// Choosing which enemy to kill
 	if(enemy == NULL)
 		return; // No one to fight
-	if(enemy->type == 0) 
-		res->flagWearers[pawn->team] = pawn;
-		return;
-	if(enemy->type == 1)
+	if(enemy->type == 0)
+	{
+		if(enemy->team == pawn->team &&
+			res->flagWearers[abs(pawn->team-1)] != NULL &&
+			res->flagWearers[abs(enemy->team-1)]->position.x == pawn->position.x && 
+			res->flagWearers[abs(enemy->team-1)]->position.y == pawn->position.y)
+			gi->winner = pawn->team;
+		else if(enemy->team != pawn->team)
+			res->flagWearers[abs(pawn->team-1)] = pawn;
+	}
+	else if(enemy->type == 1)
 	{
 		if(pawn->type == 1)
-			return; // scout vs scout : nothing happens
+			return;
 		if(pawn->type > 1)
 			killPawn(res, enemy);
 	}
@@ -259,7 +273,13 @@ int movePawn(GameInfo* gi, WorldResources* res, Pawn* pawn, Vector2 dest)
 
 	pawn->hasPlayed = 1;
 	res->selectedPawn = NULL;
-	handleFight(res, pawn);
+	handleFight(gi, res, pawn);
+
+	// Move the flag to the flag wearer
+	if(res->flagWearers[abs(pawn->team-1)] != NULL &&
+		pawn->position.x == res->flagWearers[abs(pawn->team-1)]->position.x &&
+		pawn->position.y == res->flagWearers[abs(pawn->team-1)]->position.y)
+		res->flags[abs(pawn->team-1)]->position = pawn->position;
 }
 
 void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
@@ -344,6 +364,7 @@ void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 		// Skipping if this is a flag
 		if(res->selectedPawn->type)
 		{
+			// Drawing movement box
 			SDL_SetRenderDrawColor(renderer, 255, 30, 30, 255);
 			SDL_RenderDrawLines(renderer, square, 5);
 		}

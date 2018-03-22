@@ -6,7 +6,7 @@
 typedef struct GameInfo
 {
     int turn;
-    char currentPlayer;
+    char winner;
 }
 GameInfo;
 

@@ -45,12 +45,22 @@ int main(int argc, char** argv)
 	// Initialize game
 	GameInfo gameInfo;
 	gameInfo.turn = 1;
-	gameInfo.currentPlayer = 0;
+	gameInfo.winner = -1;
 
 	// Initialize world
 	WorldResources worldResources;
 	worldResources.selectedPawn = NULL;
 	setupWorld(renderer, &worldResources);
+	int flagNum = 0;
+	for(int i = 0; i < worldResources.pawnsCount; ++i)
+	{
+		if(worldResources.pawns[i].type == 0)
+		{
+			worldResources.flags[flagNum] = &worldResources.pawns[i];
+			++flagNum;
+		}
+	}
+
 
 	// Main game loop
 	int shouldClose = 0;
@@ -72,7 +82,19 @@ int main(int argc, char** argv)
 		SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
 
 		SDL_RenderPresent(renderer);
+
+		if(gameInfo.winner != -1)
+			shouldClose = 1;
+
+
 		SDL_Delay(16);
+	}
+
+	if(gameInfo.winner != -1)
+	{
+		char text[] = "Winner : ";
+		sprintf(text, "%s %s", text, gameInfo.winner ? "red team" : "blue team");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Game finished", text, window);
 	}
 
 	SDL_DestroyWindow(window);
