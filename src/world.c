@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include <SDL2/SDL.h>
 
 #include "settings.h"
@@ -21,7 +23,7 @@ void readMapFile(WorldResources* res)
 		SDL_Quit();
 		exit(-1);
 	}
-	printf("map:\n");	
+	printf("map:\n");
 	for(int i = 0; i<MAP_HEIGTH; ++i)
 	{
 		char line[100];
@@ -37,8 +39,8 @@ void readMapFile(WorldResources* res)
 		strcpy(mapArray[i], line);
 		printf("%s\n", mapArray[i]);
 	}
-	
-	printf("pawns:\n");	
+
+	printf("pawns:\n");
 	char type, team, posX, posY;
 	Pawn* pawns = malloc(sizeof(Pawn));
 	int i = 0;
@@ -50,7 +52,7 @@ void readMapFile(WorldResources* res)
 		pawns[i].position.y = posY;
 
 		pawns[i].hasPlayed = 0;
-		
+
 		printf("%d from team %d at %d, %d\n", type, team, posX, posY);
 		++i;
 		pawns = realloc(pawns, (i+1)*sizeof(Pawn));
@@ -60,7 +62,7 @@ void readMapFile(WorldResources* res)
 	{
 		printf("%d from team %d at %d, %d\n", pawns[j].type, pawns[j].team, pawns[j].position.x, pawns[j].position.y);
 	}
-	
+
 	res->map = mapArray;
 	res->pawnsCount = i;
 	res->pawns = pawns;
@@ -72,7 +74,7 @@ void createTextures(SDL_Renderer* renderer, SDL_Texture** terrainTexture, SDL_Te
 	SDL_Surface *tTileset, *eTileset;
 	tTileset = SDL_LoadBMP("resources/map_tiles.bmp");
 	eTileset = SDL_LoadBMP("resources/entities_tiles.bmp");
-	
+
 	if (!tTileset || !eTileset)
 	{
 		fprintf(stderr, "Failed to load map tilesets\n");
@@ -119,7 +121,7 @@ void setupWorld(SDL_Renderer* renderer, WorldResources* res)
 	// Getting textures
 	SDL_Texture *terrainTexture, *entitiesTexture;
 	createTextures(renderer, &terrainTexture, &entitiesTexture);
-	
+
 	// Packing up world resources
 	//WorldResources res;
 	readMapFile(res);
@@ -235,7 +237,7 @@ int getMovPoints(Pawn* pawn, char tileType)
 			points = 1;
 			break;
 	}
-	
+
 	return points;
 }
 int movePawn(GameInfo* gi, WorldResources* res, Pawn* pawn, Vector2 dest)
@@ -244,17 +246,17 @@ int movePawn(GameInfo* gi, WorldResources* res, Pawn* pawn, Vector2 dest)
 		return 1; // There is already a pawn at this place
 	if(pawn == NULL)
 		return 2; // No one to move
-	
+
 	int points = getMovPoints(pawn, res->map[pawn->position.y][pawn->position.x]);
-	if(	dest.x < pawn->position.x - points || 
+	if(	dest.x < pawn->position.x - points ||
 		dest.x > pawn->position.x + points ||
 		dest.y < pawn->position.y - points ||
 		dest.y > pawn->position.y + points)
 		return 3; // Too far
-	
+
 	if(dest.x < 0 || dest.x > (MAP_WIDTH - 1) || dest.y < 0 || dest.y > (MAP_HEIGTH - 1))
 		return 4; // Out of map boundaries
-	
+
 	pawn->position = dest;
 	char bitSet = (gi->turn%2 ? 0x1 : 0x2);
 	res->fog[dest.y][dest.x] |= bitSet;
@@ -280,7 +282,7 @@ int movePawn(GameInfo* gi, WorldResources* res, Pawn* pawn, Vector2 dest)
 
 void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 {
-	// Display map tiles 
+	// Display map tiles
 	for(int i = 0; i < MAP_WIDTH; ++i)
 	{
 		for(int j = 0; j < MAP_HEIGTH; ++j)
@@ -298,8 +300,8 @@ void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 				(res->fog[j][i] & 0x1) && (gi->turn % 2))
 				SDL_RenderCopy(renderer, res->terrainTexture, &srcRect, &destRect);
 		}
-	}	
-	
+	}
+
 	// Display pawns
 	for(int i = 0; i < res->pawnsCount; ++i)
 	{
@@ -311,7 +313,7 @@ void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 		if(((res->fog[res->pawns[i].position.y][res->pawns[i].position.x] >> 0x1) && !(gi->turn % 2)) ||
 			(res->fog[res->pawns[i].position.y][res->pawns[i].position.x] & 0x1) && (gi->turn % 2))
 			SDL_RenderCopy(renderer, res->entitiesTexture, &srcRect, &destRect);
-		
+
 	}
 
 	// Display the grid
@@ -320,7 +322,7 @@ void renderWorld(SDL_Renderer* renderer, GameInfo* gi, WorldResources* res)
 		SDL_RenderDrawLine(renderer, i, 0, i, HEIGTH);
 	for(int i = 0;i < HEIGTH; i += TILE_SIZE)
 		SDL_RenderDrawLine(renderer, 0, i, WIDTH, i);
-	
+
 	// Draw the movement square
 	if(res->selectedPawn != NULL)
 	{

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -26,7 +27,7 @@ int main(int argc, char** argv)
 	}
 
 	// Creating renderer
-	// TODO use hardware acceleration	
+	// TODO use hardware acceleration
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
 
 	SDL_UpdateWindowSurface(window);
@@ -36,7 +37,7 @@ int main(int argc, char** argv)
 	{
 		fprintf(stderr, "Failed to initialize SDL2_TTF\n%s\n", TTF_GetError());
 		exit(EXIT_FAILURE);
-	}	
+	}
 	// Creating the GUI
 	TTF_Font* font = TTF_OpenFont("resources/font.ttf", 24);
 
@@ -72,13 +73,13 @@ int main(int argc, char** argv)
 		}
 
 		SDL_UpdateWindowSurface(window);
-		
+
 		SDL_RenderClear(renderer);
-		
+
 		// Render world and HUD
 		renderWorld(renderer, &gameInfo, &worldResources);
 		drawHUD(renderer, font, &gameInfo);
-		
+
 		SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
 
 		SDL_RenderPresent(renderer);
@@ -104,6 +105,6 @@ int main(int argc, char** argv)
 
 	TTF_CloseFont(font);
 	TTF_Quit();
-	
+
 	return 0;
 }
