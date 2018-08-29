@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <time.h>
 
 #include <SDL2/SDL.h>
@@ -9,12 +10,13 @@
 void readMapFile(WorldResources* res)
 {
 	FILE *mapFile = fopen("resources/map", "rt");
+	/*
 	if(!mapFile)
 	{
 		fprintf(stderr, "Failed to load map\n");
 		SDL_Quit();
 		exit(-1);
-	}
+	}*/
 
 	char** mapArray;
 	if((mapArray = malloc(MAP_HEIGTH*sizeof(char*))) == NULL)
@@ -26,7 +28,7 @@ void readMapFile(WorldResources* res)
 	printf("map:\n");
 	for(int i = 0; i<MAP_HEIGTH; ++i)
 	{
-		char line[100];
+		char line[100]="";
 		fgets(line, sizeof(line), mapFile);
 		line[MAP_WIDTH] = '\0';
 
@@ -75,12 +77,15 @@ void createTextures(SDL_Renderer* renderer, SDL_Texture** terrainTexture, SDL_Te
 	tTileset = SDL_LoadBMP("resources/map_tiles.bmp");
 	eTileset = SDL_LoadBMP("resources/entities_tiles.bmp");
 
+	/*
 	if (!tTileset || !eTileset)
 	{
 		fprintf(stderr, "Failed to load map tilesets\n");
 		SDL_Quit();
 		exit(-1);
 	}
+	*/
+
 
 	// Create texures from tileset
 	*terrainTexture = SDL_CreateTextureFromSurface(renderer, tTileset);
